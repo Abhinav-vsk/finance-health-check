@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Finance Health Check</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container" id="form-container">
+    <h1>💰 Check Your Financial Health</h1>
+
+    <form id="finance-form">
+      <label>Monthly Income (₹)
+        <input type="number" id="income" required />
+      </label>
+
+      <label>Monthly Expenses (₹)
+        <input type="number" id="expenses" required />
+      </label>
+
+      <label>Total Debt (₹)
+        <input type="number" id="debt" required />
+      </label>
+
+      <label>Current Savings (₹)
+        <input type="number" id="savings" required />
+      </label>
+
+      <label>Investments (₹)
+        <input type="number" id="investments" required />
+      </label>
+
+      <label>Saving Goal per Month (₹)
+        <input type="number" id="goal" required />
+      </label>
+
+      <label>Risk Tolerance
+        <input type="range" id="risk" min="1" max="10" value="5" />
+      </label>
+
+      <button type="submit">Submit & View Insights</button>
+    </form>
+  </div>
+
+  <div class="container hidden" id="dashboard">
+    <h2>Your Financial Snapshot 📊</h2>
+    <canvas id="savingsChart"></canvas>
+    <canvas id="incomeExpenseChart"></canvas>
+    <div id="recommendations"></div>
+    <button onclick="goBack()">🔙 Back</button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
