@@ -2,56 +2,205 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Finance Health Check</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Compensation Breakdown</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 1rem;
+      background: #f4f4f4;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 1rem;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      overflow-x: hidden;
+      box-sizing: border-box;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+    input[type="number"] {
+      width: 100%;
+      padding: 0.5rem;
+      font-size: 1rem;
+      margin-top: 0.5rem;
+      margin-bottom: 1rem;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      padding: 0.75rem;
+      background: #007bff;
+      color: white;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      margin-top: 0.5rem;
+    }
+    canvas {
+      margin: 2rem 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1rem;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 0.5rem;
+      text-align: left;
+    }
+    h3 {
+      margin-top: 2rem;
+    }
+    .total-row {
+      font-weight: bold;
+      background: #e9ecef;
+    }
+    .back-icon-button {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      cursor: pointer;
+    }
+    @media (max-width: 600px) {
+      table, th, td {
+        font-size: 0.9rem;
+      }
+    }
+  </style>
 </head>
 <body>
-  <div class="container" id="form-container">
-    <h1>💰 Check Your Financial Health</h1>
-
-    <form id="finance-form">
-      <label>Monthly Income (₹)
-        <input type="number" id="income" required />
-      </label>
-
-      <label>Monthly Expenses (₹)
-        <input type="number" id="expenses" required />
-      </label>
-
-      <label>Total Debt (₹)
-        <input type="number" id="debt" required />
-      </label>
-
-      <label>Current Savings (₹)
-        <input type="number" id="savings" required />
-      </label>
-
-      <label>Investments (₹)
-        <input type="number" id="investments" required />
-      </label>
-
-      <label>Saving Goal per Month (₹)
-        <input type="number" id="goal" required />
-      </label>
-
-      <label>Risk Tolerance
-        <input type="range" id="risk" min="1" max="10" value="5" />
-      </label>
-
-      <button type="submit">Submit & View Insights</button>
-    </form>
+  <div class="container" id="form-screen">
+    <h2>Enter Main Cash</h2>
+    <input type="range" id="mainCashSlider" min="100000" max="5000000" value="1452528" step="10000" oninput="syncNumberInput(this.value)" />
+    <input type="number" id="mainCash" value="1452528" oninput="syncSliderInput(this.value)" />
+    <button onclick="calculateBreakdown()">Submit</button>
   </div>
 
-  <div class="container hidden" id="dashboard">
-    <h2>Your Financial Snapshot 📊</h2>
-    <canvas id="savingsChart"></canvas>
-    <canvas id="incomeExpenseChart"></canvas>
-    <div id="recommendations"></div>
-    <button onclick="goBack()">🔙 Back</button>
+  <div class="container" id="results-screen" style="display: none; position: relative;">
+    <button class="back-icon-button" onclick="goBack()">&#8592;</button>
+    <h2>Compensation Breakdown</h2>
+    <canvas id="pieChart"></canvas>
+
+    <h3>Total Cash Compensation</h3>
+    <table id="cashTable"></table>
+
+    <h3>Monetary Benefits</h3>
+    <table id="monetaryTable"></table>
+
+    <h3>Non-Monetary Benefits</h3>
+    <table id="nonMonetaryTable"></table>
+
+    <button onclick="goBack()">Back</button>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="script.js"></script>
+  <script>
+    const weightings = {
+      totalCash: 0.7935,
+      monetary: 0.1810,
+      nonMonetary: 0.0253
+    };
+
+    const breakdowns = {
+      totalCash: [
+        { name: "Basic + HRA + Flex", pct: 0.7222 },
+        { name: "Retirals (PF + Gratuity)", pct: 0.1988 },
+        { name: "PGS Variable Pay Plan", pct: 0.0789 }
+      ],
+      monetary: [
+        { name: "Leave Encashment", pct: 0.1799 },
+        { name: "Employee Share Purchase Plan", pct: 0.6844 },
+        { name: "Home Connect Allowance", pct: 0.0593 },
+        { name: "One-time Office Setup Allowance", pct: 0.0761 }
+      ],
+      nonMonetary: [
+        { name: "Group Medical Insurance", pct: 0.6793 },
+        { name: "Group Term Life Insurance", pct: 0.1630 },
+        { name: "Group Personal Accident Insurance", pct: 0.0489 },
+        { name: "Staff Welfare", pct: 0.1087 }
+      ]
+    };
+
+    function syncNumberInput(val) {
+      document.getElementById("mainCash").value = val;
+    }
+
+    function syncSliderInput(val) {
+      document.getElementById("mainCashSlider").value = val;
+    }
+
+    function goBack() {
+      document.getElementById("results-screen").style.display = "none";
+      document.getElementById("form-screen").style.display = "block";
+    }
+
+    function calculateBreakdown() {
+      const mainCash = parseFloat(document.getElementById("mainCash").value);
+      if (!mainCash || mainCash <= 0) return alert("Enter valid main cash amount.");
+
+      document.getElementById("form-screen").style.display = "none";
+      document.getElementById("results-screen").style.display = "block";
+
+      const totalCash = mainCash * weightings.totalCash;
+      const monetary = mainCash * weightings.monetary;
+      const nonMonetary = mainCash * weightings.nonMonetary;
+
+      const pie = new Chart(document.getElementById("pieChart"), {
+        type: 'doughnut',
+        data: {
+          labels: ["Total Cash Compensation", "Monetary Benefits", "Non-Monetary Benefits"],
+          datasets: [{
+            data: [totalCash, monetary, nonMonetary],
+            backgroundColor: ["#007bff", "#28a745", "#ffc107"],
+            borderColor: ["#ffffff"],
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            tooltip: {
+              enabled: false
+            },
+            legend: {
+              position: 'bottom',
+              labels: {
+                boxWidth: 15,
+                font: {
+                  size: 14
+                }
+              }
+            }
+          }
+        }
+      });
+
+      const renderTable = (baseAmount, breakdownArray, tableId) => {
+        const table = document.getElementById(tableId);
+        let total = 0;
+        table.innerHTML = `<tr><th>Name</th><th>Amount (₹)</th></tr>` +
+          breakdownArray.map(item => {
+            const amt = Math.round(item.pct * baseAmount);
+            total += amt;
+            return `<tr><td>${item.name}</td><td>${amt.toLocaleString()}</td></tr>`;
+          }).join("") +
+          `<tr class='total-row'><td>Total</td><td>${Math.round(total).toLocaleString()}</td></tr>`;
+      };
+
+      renderTable(totalCash, breakdowns.totalCash, "cashTable");
+      renderTable(monetary, breakdowns.monetary, "monetaryTable");
+      renderTable(nonMonetary, breakdowns.nonMonetary, "nonMonetaryTable");
+    }
+  </script>
 </body>
 </html>
