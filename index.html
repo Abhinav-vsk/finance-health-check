@@ -25,11 +25,10 @@
       box-sizing: border-box;
       position: relative;
     }
-
-    .container-1 {
+    .result-container {
       max-width: 600px;
       margin: auto;
-      /* background: #0f2a45; */
+      background: #0f2a4505;
       padding: 1rem;
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.3);
@@ -37,12 +36,10 @@
       box-sizing: border-box;
       position: relative;
     }
-
-    input[type="range"] {
+    input[type="range"], input[type="text"] {
       width: 100%;
     }
-    input[type="number"] {
-      width: 100%;
+    input[type="number"], input[type="text"] {
       padding: 0.5rem;
       font-size: 1rem;
       margin-top: 0.5rem;
@@ -51,6 +48,12 @@
       background: #091D2F;
       color: white;
       border: 1px solid #0061a0;
+    }
+    input:invalid {
+      border-color: rgb(207, 207, 207);
+    }
+    input:invalid:focus::placeholder {
+      color: red;
     }
     button {
       width: 100%;
@@ -107,23 +110,42 @@
       box-shadow: 0 0 10px rgba(0,0,0,0.3);
       margin-bottom: 2rem;
     }
+    .intangible-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .intangible-box {
+      background: #0a2b4d;
+      padding: 0.75rem;
+      text-align: center;
+      border-radius: 8px;
+      box-shadow: 0 0 6px rgba(0,0,0,0.2);
+    }
+    .intangible-box img {
+      max-width: 40px;
+      margin-bottom: 0.5rem;
+    }
     @media (max-width: 600px) {
       table, th, td {
-        font-size: 0.8rem;
+        font-size: 0.9rem;
       }
     }
   </style>
 </head>
 <body>
   <div class="container" id="form-screen">
-    <h2>Enter Total Reward</h2>
+    <h2>Enter Your Name</h2>
+    <input type="text" id="employeeName" placeholder="e.g. Priya Sharma" required oninvalid="this.setCustomValidity('Please fill out this field.')" oninput="this.setCustomValidity('')" />
+    <h2>Enter Your Total Reward Amount</h2>
     <input type="range" id="mainCashSlider" min="100000" max="5000000" value="1452528" step="10000" oninput="syncNumberInput(this.value)" />
     <input type="number" id="mainCash" value="1452528" oninput="syncSliderInput(this.value)" />
     <button onclick="calculateBreakdown()">Submit</button>
   </div>
 
-  <div class="container-1" id="results-screen" style="display:none;">
-    <h2>Compensation Breakdown</h2>
+  <div class="result-container" id="results-screen" style="display: none;">
+    <h2 id="greetingText">Compensation Breakdown</h2>
 
     <div class="table-card">
       <canvas id="pieChart"></canvas>
@@ -143,6 +165,19 @@
     <div class="table-card">
       <h3>Non-Monetary Benefits</h3>
       <table id="nonMonetaryTable"></table>
+    </div>
+
+    <div class="table-card">
+      <h3>Intangible Benefits</h3>
+      <div class="intangible-grid">
+        <div class="intangible-box"><img src="https://img.icons8.com/?size=100&id=Gm14jOnt49Ve&format=png&color=000000" alt="Transport"/><div>Transport</div></div>
+        <div class="intangible-box"><img src="https://img.icons8.com/?size=100&id=srs1y5jxhLjK&format=png&color=000000" alt="Day Care"/><div>Day Care Facilities</div></div>
+        <div class="intangible-box"><img src="https://img.icons8.com/?size=100&id=21743&format=png&color=000000" alt="Learning"/><div>Learning & Development</div></div>
+        <div class="intangible-box"><img src="https://img.icons8.com/?size=100&id=GCaAFRCil7ti&format=png&color=000000" alt="Gym"/><div>Gym in Office</div></div>
+        <div class="intangible-box"><img src="https://img.icons8.com/?size=100&id=23232&format=png&color=000000" alt="Referral"/><div>Employee Referral</div></div>
+        <div class="intangible-box"><img src="https://img.icons8.com/?size=100&id=79UfeEN6JkZ8&format=png&color=000000" alt="Assistance"/><div>Assistance Program</div></div>
+        <div class="intangible-box"><img src="https://img.icons8.com/?size=100&id=dfXdNmnTR3uH&format=png&color=000000" alt="Medical"/><div>Medical Facility</div></div>
+      </div>
     </div>
 
     <button onclick="goBack()">Back</button>
@@ -191,11 +226,20 @@
     }
 
     function calculateBreakdown() {
+      const nameInput = document.getElementById("employeeName");
+      const name = nameInput.value.trim();
+      if (!name) {
+        nameInput.focus();
+        return alert("Please enter your name.");
+      }
+
       const mainCash = parseFloat(document.getElementById("mainCash").value);
       if (!mainCash || mainCash <= 0) return alert("Enter valid main cash amount.");
 
       document.getElementById("form-screen").style.display = "none";
       document.getElementById("results-screen").style.display = "block";
+
+      document.getElementById("greetingText").innerHTML = ` Thanks, <strong>${name}</strong>!<BR>Here's your compensation breakdown.`;
 
       const totalCash = mainCash * weightings.totalCash;
       const monetary = mainCash * weightings.monetary;
@@ -211,7 +255,7 @@
           datasets: [{
             data: data,
             backgroundColor: colors,
-            borderColor: ["#fff"],
+            borderColor: ["#B2BEB5"],
             borderWidth: 1
           }]
         },
@@ -224,9 +268,7 @@
               display: true,
               formatter: (value, context) => `${Math.round((value / mainCash) * 100)}%`,
               color: '#ffffff',
-              font: {
-                size: 12
-              }
+              font: { size: 10 }
             }
           }
         },
