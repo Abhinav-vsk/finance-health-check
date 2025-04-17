@@ -5,22 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Compensation Breakdown</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
   <style>
     body {
       font-family: sans-serif;
       margin: 0;
       padding: 1rem;
-      background: #f4f4f4;
+      background: #091D2F;
+      color: white;
     }
     .container {
       max-width: 600px;
       margin: auto;
-      background: white;
+      background: #0f2a45;
       padding: 1rem;
       border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
       overflow-x: hidden;
       box-sizing: border-box;
+      position: relative;
     }
     input[type="range"] {
       width: 100%;
@@ -32,11 +35,14 @@
       margin-top: 0.5rem;
       margin-bottom: 1rem;
       box-sizing: border-box;
+      background: #091D2F;
+      color: white;
+      border: 1px solid #0061a0;
     }
     button {
       width: 100%;
       padding: 0.75rem;
-      background: #007bff;
+      background: #0061a0;
       color: white;
       font-size: 1rem;
       border: none;
@@ -44,12 +50,13 @@
       margin-top: 0.5rem;
     }
     canvas {
-      margin: 2rem 0;
+      margin: 2rem 0 1rem;
     }
     table {
       width: 100%;
       border-collapse: collapse;
       margin-bottom: 1rem;
+      color: white;
     }
     th, td {
       border: 1px solid #ccc;
@@ -61,16 +68,31 @@
     }
     .total-row {
       font-weight: bold;
-      background: #e9ecef;
+      background: #0a395c;
     }
-    .back-icon-button {
-      background: none;
-      border: none;
-      font-size: 1.5rem;
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      cursor: pointer;
+    .legend-info {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin: 0.5rem;
+    }
+    .color-box {
+      width: 16px;
+      height: 16px;
+      margin-right: 0.5rem;
+    }
+    .table-card {
+      background: #0f2a45;
+      padding: 1rem;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      margin-bottom: 2rem;
     }
     @media (max-width: 600px) {
       table, th, td {
@@ -87,19 +109,28 @@
     <button onclick="calculateBreakdown()">Submit</button>
   </div>
 
-  <div class="container" id="results-screen" style="display: none; position: relative;">
-    <button class="back-icon-button" onclick="goBack()">&#8592;</button>
+  <div class="container" id="results-screen" style="display: none;">
     <h2>Compensation Breakdown</h2>
-    <canvas id="pieChart"></canvas>
 
-    <h3>Total Cash Compensation</h3>
-    <table id="cashTable"></table>
+    <div class="table-card">
+      <canvas id="pieChart"></canvas>
+      <div class="legend-info" id="legendInfo"></div>
+    </div>
 
-    <h3>Monetary Benefits</h3>
-    <table id="monetaryTable"></table>
+    <div class="table-card">
+      <h3>Total Cash Compensation</h3>
+      <table id="cashTable"></table>
+    </div>
 
-    <h3>Non-Monetary Benefits</h3>
-    <table id="nonMonetaryTable"></table>
+    <div class="table-card">
+      <h3>Monetary Benefits</h3>
+      <table id="monetaryTable"></table>
+    </div>
+
+    <div class="table-card">
+      <h3>Non-Monetary Benefits</h3>
+      <table id="nonMonetaryTable"></table>
+    </div>
 
     <button onclick="goBack()">Back</button>
   </div>
@@ -131,6 +162,8 @@
       ]
     };
 
+    const colors = ["#007bff", "#28a745", "#ffc107"];
+
     function syncNumberInput(val) {
       document.getElementById("mainCash").value = val;
     }
@@ -155,13 +188,16 @@
       const monetary = mainCash * weightings.monetary;
       const nonMonetary = mainCash * weightings.nonMonetary;
 
+      const data = [totalCash, monetary, nonMonetary];
+      const labels = ["Total Cash Compensation", "Monetary Benefits", "Non-Monetary Benefits"];
+
       const pie = new Chart(document.getElementById("pieChart"), {
         type: 'doughnut',
         data: {
-          labels: ["Total Cash Compensation", "Monetary Benefits", "Non-Monetary Benefits"],
+          labels: labels,
           datasets: [{
-            data: [totalCash, monetary, nonMonetary],
-            backgroundColor: ["#007bff", "#28a745", "#ffc107"],
+            data: data,
+            backgroundColor: colors,
             borderColor: ["#ffffff"],
             borderWidth: 2
           }]
@@ -169,21 +205,28 @@
         options: {
           responsive: true,
           plugins: {
-            tooltip: {
-              enabled: false
-            },
-            legend: {
-              position: 'bottom',
-              labels: {
-                boxWidth: 15,
-                font: {
-                  size: 14
-                }
+            tooltip: { enabled: false },
+            legend: { display: false },
+            datalabels: {
+              display: true,
+              formatter: (value, context) => `${Math.round((value / mainCash) * 100)}%`,
+              color: '#ffffff',
+              font: {
+                size: 8
               }
             }
           }
-        }
+        },
+        plugins: [ChartDataLabels]
       });
+
+      const legendInfo = document.getElementById("legendInfo");
+      legendInfo.innerHTML = labels.map((label, i) => `
+        <div class="legend-item">
+          <div class="color-box" style="background-color: ${colors[i]};"></div>
+          <div><strong>${label}:</strong> ₹${Math.round(data[i]).toLocaleString()}</div>
+        </div>
+      `).join("");
 
       const renderTable = (baseAmount, breakdownArray, tableId) => {
         const table = document.getElementById(tableId);
