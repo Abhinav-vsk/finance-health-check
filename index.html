@@ -25,6 +25,19 @@
       box-sizing: border-box;
       position: relative;
     }
+
+    .container-1 {
+      max-width: 600px;
+      margin: auto;
+      /* background: #0f2a45; */
+      padding: 1rem;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      overflow-x: hidden;
+      box-sizing: border-box;
+      position: relative;
+    }
+
     input[type="range"] {
       width: 100%;
     }
@@ -96,20 +109,20 @@
     }
     @media (max-width: 600px) {
       table, th, td {
-        font-size: 0.9rem;
+        font-size: 0.8rem;
       }
     }
   </style>
 </head>
 <body>
   <div class="container" id="form-screen">
-    <h2>Enter Main Cash</h2>
+    <h2>Enter Total Reward</h2>
     <input type="range" id="mainCashSlider" min="100000" max="5000000" value="1452528" step="10000" oninput="syncNumberInput(this.value)" />
     <input type="number" id="mainCash" value="1452528" oninput="syncSliderInput(this.value)" />
     <button onclick="calculateBreakdown()">Submit</button>
   </div>
 
-  <div class="container" id="results-screen" style="display: none;">
+  <div class="container-1" id="results-screen" style="display:none;">
     <h2>Compensation Breakdown</h2>
 
     <div class="table-card">
@@ -198,8 +211,8 @@
           datasets: [{
             data: data,
             backgroundColor: colors,
-            borderColor: ["#ffffff"],
-            borderWidth: 2
+            borderColor: ["#fff"],
+            borderWidth: 1
           }]
         },
         options: {
@@ -212,7 +225,7 @@
               formatter: (value, context) => `${Math.round((value / mainCash) * 100)}%`,
               color: '#ffffff',
               font: {
-                size: 8
+                size: 12
               }
             }
           }
